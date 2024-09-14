@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        /* Style the body with a background gradient */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+            min-height: 100vh; /* Ensure the body takes the full height */
+            display: flex;
+            justify-content: center; /* Horizontally center */
+            align-items: center; /* Vertically center */
+        }
+
+        /* Style the container to dynamically expand and center */
+        .container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+            text-align: center; /* Center all text inside the container */
+            box-sizing: border-box; /* Include padding in the width */
+        }
+
+        /* Header styling */
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Style the inputs and buttons to be centered */
+        input {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            width: calc(100% - 20px); /* Dynamic width adjustment */
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box; /* Ensure padding does not expand the width */
+        }
+
+        /* Button styling */
+        button {
+            padding: 10px;
+            width: calc(100% - 20px); /* Ensure button aligns with inputs */
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Styling for the flag container */
+        #flagContainer {
+            margin-top: 20px;
+        }
+
+        /* Styling for error messages */
+        #message {
+            text-align: center;
+            color: #ff3333;
+            margin-top: 15px;
+        }
+
+        /* Hidden elements */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required />
+            <input type="password" id="password" placeholder="Password" required />
+            <button type="submit">Login</button>
+        </form>
+        <div id="flagContainer" class="hidden">
+            <h2>Flag</h2>
+            <p id="flag"></p>
+        </div>
+        <div id="message" class="hidden">
+            <p id="loginStatus"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    const { token } = await response.json();
+                    localStorage.setItem('token', token);
+                    document.getElementById('loginForm').classList.add('hidden');
+                    fetchFlag(token);
+                } else {
+                    document.getElementById('loginStatus').textContent = 'Invalid credentials';
+                    document.getElementById('message').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        async function fetchFlag(token) {
+            try {
+                const response = await fetch('/flag', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const { flag } = await response.json();
+                    document.getElementById('flag').textContent = flag;
+                    document.getElementById('flagContainer').classList.remove('hidden');
+                } else {
+                    document.getElementById('loginStatus').innerHTML = 'Logged in, but no access to the flag.';
+                    document.getElementById('message').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
